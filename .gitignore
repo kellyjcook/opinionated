@@ -35,3 +35,8 @@ dev-dist/
 # Logs
 *.log
 tsc_output.txt
+
+# Deploy keys
+.deploy_key
+.deploy_key.pub
+askpass.sh
