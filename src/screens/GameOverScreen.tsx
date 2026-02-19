@@ -31,7 +31,7 @@ export function GameOverScreen() {
   const textColor = idealTextColor(hex);
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-6 bg-[#f8f9fa] gap-6">
+    <div className="h-full flex flex-col items-center justify-center p-[9px] bg-[#f8f9fa] gap-4">
       {/* Winner announcement */}
       <div className="text-center">
         <p className="text-lg text-[#5f6368] mb-2">The most opinionated player is...</p>

@@ -15,7 +15,9 @@ export function SetupScreen() {
   const { state, dispatch } = useGame();
   const { user } = useAuth();
   const [playerCount, setPlayerCount] = useState(3);
-  const [playerNames, setPlayerNames] = useState<string[]>(Array(8).fill(''));
+  const [playerNames, setPlayerNames] = useState<string[]>(
+    Array.from({ length: 8 }, (_, i) => `Player ${i + 1}`)
+  );
   const [playerColors, setPlayerColors] = useState<PlayerColor[]>(COLOR_ORDER.slice(0, 8));
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -64,12 +66,10 @@ export function SetupScreen() {
   const handleStart = useCallback(async () => {
     setError('');
 
-    // Validate names
-    const names = playerNames.slice(0, playerCount);
-    if (names.some((n) => !n.trim())) {
-      setError('All players must have a name');
-      return;
-    }
+    // Validate names — use defaults for any blanks
+    const names = playerNames.slice(0, playerCount).map((n, i) =>
+      n.trim() || `Player ${i + 1}`
+    );
 
     // Validate unique colors
     const colors = playerColors.slice(0, playerCount);
@@ -83,7 +83,7 @@ export function SetupScreen() {
     // Create players
     const players: Player[] = names.map((name, i) => ({
       id: crypto.randomUUID(),
-      name: name.trim(),
+      name,
       color: colors[i],
       seatOrder: i,
       score: 0,
@@ -136,13 +136,13 @@ export function SetupScreen() {
   return (
     <div className="h-full flex flex-col bg-[#f8f9fa] overflow-auto">
       {/* Header */}
-      <div className="p-4 text-center">
+      <div className="pt-[9px] pb-2 text-center">
         <h2 className="text-2xl font-bold text-[#202124]">Game Setup</h2>
       </div>
 
-      <div className="flex-1 px-6 pb-6 max-w-[500px] mx-auto w-full">
+      <div className="flex-1 px-[9px] pb-[9px] max-w-[500px] mx-auto w-full">
         {/* Player Count */}
-        <div className="mb-6">
+        <div className="mb-4">
           <label className="block text-sm font-medium text-[#202124] mb-2">
             Number of Players
           </label>
@@ -151,7 +151,7 @@ export function SetupScreen() {
               <button
                 key={n}
                 onClick={() => setPlayerCount(n)}
-                className={`w-12 h-12 rounded-lg text-lg font-bold transition-all ${
+                className={`w-11 h-11 rounded-lg text-lg font-bold transition-all ${
                   playerCount === n
                     ? 'bg-[#1a73e8] text-white shadow-md'
                     : 'bg-white text-[#202124] border-2 border-[#dadce0]'
@@ -164,17 +164,17 @@ export function SetupScreen() {
         </div>
 
         {/* Player Names & Colors */}
-        <div className="space-y-3 mb-6">
+        <div className="space-y-2 mb-4">
           {Array.from({ length: playerCount }).map((_, i) => {
             const color = playerColors[i];
             const { hex } = PLAYER_COLORS[color];
             const textColor = idealTextColor(hex);
 
             return (
-              <div key={i} className="flex items-center gap-3">
+              <div key={i} className="flex items-center gap-2">
                 <button
                   onClick={() => cycleColor(i)}
-                  className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold transition-transform active:scale-90 border-2 border-white shadow-md"
+                  className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold transition-transform active:scale-90 border-2 border-white shadow-md"
                   style={{ backgroundColor: hex, color: textColor }}
                   title="Tap to change color"
                 >
@@ -186,14 +186,14 @@ export function SetupScreen() {
                   onChange={(e) => handleNameChange(i, e.target.value)}
                   maxLength={25}
                   placeholder={`Player ${i + 1}`}
-                  className="flex-1 px-3 py-2.5 border-2 border-[#dadce0] rounded-lg text-base transition-colors focus:border-[#1a73e8] focus:outline-none"
+                  className="flex-1 px-3 py-2 border-2 border-[#dadce0] rounded-lg text-base transition-colors focus:border-[#1a73e8] focus:outline-none"
                 />
               </div>
             );
           })}
         </div>
 
-        {error && <p className="text-[#c5221f] text-sm mb-4 text-center">{error}</p>}
+        {error && <p className="text-[#c5221f] text-sm mb-3 text-center">{error}</p>}
 
         <Button onClick={handleStart} disabled={loading} size="lg" className="w-full">
           {loading ? 'Starting...' : 'Start Game'}

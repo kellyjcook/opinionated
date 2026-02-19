@@ -10,6 +10,15 @@
   --color-warning: #ff9800;
   --color-bg: #f8f9fa;
   --color-card: #ffffff;
+  --screen-pad: 9px;
+}
+
+/* Safe-area padding for iPhone notch/dynamic island */
+@supports (padding-top: env(safe-area-inset-top)) {
+  #root {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 * {

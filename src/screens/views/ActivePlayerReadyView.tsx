@@ -13,7 +13,7 @@ export function ActivePlayerReadyView() {
 
   return (
     <div
-      className="h-full flex flex-col items-center justify-center p-6 gap-8"
+      className="h-full flex flex-col items-center justify-center p-[9px] gap-6"
       style={{ backgroundColor: hex }}
     >
       <div className="text-center" style={{ color: textColor }}>
@@ -22,7 +22,7 @@ export function ActivePlayerReadyView() {
         <p className="text-lg opacity-80">for "{state.currentScenario?.text}"</p>
       </div>
 
-      <div className="bg-white/20 rounded-xl p-6 text-center max-w-[350px]" style={{ color: textColor }}>
+      <div className="bg-white/20 rounded-xl p-4 text-center max-w-[350px]" style={{ color: textColor }}>
         <p className="text-lg font-semibold mb-2">Now pass the device!</p>
         <p className="text-sm opacity-80">
           Place the device face-down on the table. The other players will pick it up to see the scenario.

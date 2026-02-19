@@ -10,7 +10,7 @@ export function ScoreBoard({ players, activePlayerIndex }: ScoreBoardProps) {
   const sorted = [...players].sort((a, b) => b.score - a.score || b.cubesPlaced - a.cubesPlaced);
 
   return (
-    <div className="flex flex-wrap justify-center gap-4 p-3">
+    <div className="flex flex-wrap justify-center gap-3 p-2">
       {sorted.map((player, _i) => (
         <PlayerBadge
           key={player.id}

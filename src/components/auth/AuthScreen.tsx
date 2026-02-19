@@ -13,7 +13,7 @@ export function AuthScreen() {
   }
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-6 bg-[#f8f9fa] overflow-auto">
+    <div className="h-full flex flex-col items-center justify-center p-[9px] bg-[#f8f9fa] overflow-auto">
       <div className="w-full max-w-[400px]">
         {/* Logo/Title */}
         <div className="text-center mb-8">

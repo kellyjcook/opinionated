@@ -12,7 +12,7 @@ export function NumberPicker({ selected, onSelect, playerColor }: NumberPickerPr
   const textColor = idealTextColor(hex);
 
   return (
-    <div className="grid grid-cols-5 gap-3 w-full max-w-[360px] mx-auto">
+    <div className="grid grid-cols-5 gap-2 w-full max-w-[360px] mx-auto">
       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
         <button
           key={n}

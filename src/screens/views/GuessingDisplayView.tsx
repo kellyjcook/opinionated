@@ -10,9 +10,9 @@ export function GuessingDisplayView() {
   if (!state.currentScenario || !activePlayer) return null;
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-6 gap-6">
+    <div className="h-full flex flex-col items-center justify-center p-[9px] gap-4">
       {/* Scenario card */}
-      <div className="bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.1)] p-6 w-full max-w-[400px] text-center">
+      <div className="bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.1)] p-4 w-full max-w-[400px] text-center">
         <p className="text-xs text-[#5f6368] uppercase tracking-wide mb-2">
           {activePlayer.name}'s Scenario
         </p>

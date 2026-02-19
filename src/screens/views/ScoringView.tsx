@@ -83,7 +83,7 @@ export function ScoringView() {
   };
 
   return (
-    <div className="h-full flex flex-col p-6 gap-4 overflow-auto">
+    <div className="h-full flex flex-col p-[9px] gap-3 overflow-auto">
       {/* Reveal answer */}
       <div className="bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.1)] p-4 text-center">
         <p className="text-sm text-[#5f6368] mb-1">

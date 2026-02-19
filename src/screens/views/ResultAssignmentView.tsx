@@ -64,7 +64,7 @@ export function ResultAssignmentView() {
   };
 
   return (
-    <div className="h-full flex flex-col p-6 gap-4 overflow-auto">
+    <div className="h-full flex flex-col p-[9px] gap-3 overflow-auto">
       <h2 className="text-xl font-bold text-center text-[#202124]">Claim Your Result</h2>
       <p className="text-sm text-center text-[#5f6368]">
         Each player: tap your name, then tap your timing result
