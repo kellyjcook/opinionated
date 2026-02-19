@@ -6,6 +6,8 @@ import { CountdownOverlay } from '../../components/ui/CountdownOverlay';
 import { PLAYER_COLORS, idealTextColor } from '../../lib/colors';
 import type { FingerResult } from '../../types/game';
 
+const BUTTON_SIZE = 110;
+
 export function TouchTimerView() {
   const { state, dispatch } = useGame();
   const { request: requestWakeLock, release: releaseWakeLock } = useWakeLock();
@@ -49,18 +51,26 @@ export function TouchTimerView() {
     setTimeout(() => setMessage(''), 3000);
   }, [dispatch]);
 
+  const handlePositionChange = useCallback(() => {
+    forceRender((n) => n + 1);
+  }, []);
+
   const {
     startTracking,
     createButtonHandlers,
+    initPositions,
+    positionsRef,
+    getPixelPosition,
+    containerRef,
     heldButtonsRef,
     liftedButtonsRef,
-    phaseRef,
   } = useTouchTimer({
     expectedFingerCount: expectedCount,
     onAllFingersDown: handleAllFingersDown,
     onFingerLift: handleFingerLift,
     onAllFingersLifted: handleAllFingersLifted,
     onFingerLostDuringCountdown: handleFingerLostDuringCountdown,
+    onPositionChange: handlePositionChange,
     enabled: state.phase === 'touchWaiting' || state.phase === 'countdown' || state.phase === 'fingerTracking',
   });
 
@@ -68,7 +78,18 @@ export function TouchTimerView() {
     setShowCountdown(false);
     setIsTracking(true);
     startTracking();
+    forceRender((n) => n + 1);
   }, [startTracking]);
+
+  // Initialize button positions in circular layout on mount
+  const positionsInitialized = useRef(false);
+  useEffect(() => {
+    if (!positionsInitialized.current && guessingPlayers.length > 0) {
+      initPositions(guessingPlayers.length);
+      positionsInitialized.current = true;
+      forceRender((n) => n + 1);
+    }
+  }, [guessingPlayers.length, initPositions]);
 
   // Memoize button handlers per player index
   const buttonHandlersRef = useRef<Map<number, ReturnType<typeof createButtonHandlers>>>(new Map());
@@ -79,7 +100,7 @@ export function TouchTimerView() {
     return buttonHandlersRef.current.get(playerIndex)!;
   }, [createButtonHandlers]);
 
-  // Block gestures on the container
+  // Block gestures on the document
   useEffect(() => {
     const onGesture = (e: Event) => { e.preventDefault(); };
     const onTouchMove = (e: TouchEvent) => {
@@ -94,14 +115,14 @@ export function TouchTimerView() {
   }, []);
 
   const heldCount = heldButtonsRef.current.size;
-  const phase = phaseRef.current;
 
   return (
     <>
       {showCountdown && <CountdownOverlay onComplete={handleCountdownComplete} />}
 
       <div
-        className="fixed inset-0 z-40 flex flex-col items-center justify-center"
+        ref={containerRef}
+        className="fixed inset-0 z-40"
         style={{
           touchAction: 'none',
           userSelect: 'none',
@@ -109,109 +130,75 @@ export function TouchTimerView() {
           backgroundColor: isTracking ? '#1a1a2e' : '#202124',
         }}
       >
-        {!isTracking && !showCountdown && (
-          <div className="text-center text-white px-[9px] w-full">
-            <h2 className="text-2xl font-bold mb-2">Place Your Fingers</h2>
-            <p className="text-sm text-gray-300 mb-4">
-              Each guessing player: hold your button
-            </p>
-
-            {/* Finger counter */}
-            <div className="text-4xl font-bold mb-4">
-              {heldCount} / {expectedCount}
-            </div>
-
-            {message && (
-              <div className="mb-4 bg-[#ff9800]/20 rounded-lg p-3 mx-auto max-w-[360px]">
-                <p className="text-[#ff9800] font-medium text-sm">{message}</p>
-              </div>
+        {/* Header text */}
+        {!showCountdown && (
+          <div className="absolute top-0 left-0 right-0 text-center text-white pt-12 px-[9px] z-10 pointer-events-none">
+            {!isTracking ? (
+              <>
+                <h2 className="text-2xl font-bold mb-1">Place Your Fingers</h2>
+                <p className="text-sm text-gray-300 mb-3">
+                  Hold your button &mdash; drag to move it
+                </p>
+                <div className="text-4xl font-bold">
+                  {heldCount} / {expectedCount}
+                </div>
+                {message && (
+                  <div className="mt-3 bg-[#ff9800]/20 rounded-lg p-3 mx-auto max-w-[360px]">
+                    <p className="text-[#ff9800] font-medium text-sm">{message}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-xl text-gray-400">Lift your finger at the right moment...</p>
             )}
-
-            {/* Player circle buttons */}
-            <div className="flex flex-wrap justify-center gap-4 mt-2">
-              {guessingPlayers.map((player, i) => {
-                const { hex } = PLAYER_COLORS[player.color];
-                const textColor = idealTextColor(hex);
-                const isHeld = heldButtonsRef.current.has(i);
-                const handlers = getHandlers(i);
-
-                return (
-                  <div
-                    key={player.id}
-                    onPointerDown={handlers.onPointerDown as unknown as React.PointerEventHandler}
-                    onPointerUp={handlers.onPointerUp as unknown as React.PointerEventHandler}
-                    onPointerCancel={handlers.onPointerCancel as unknown as React.PointerEventHandler}
-                    className="flex flex-col items-center justify-center rounded-full select-none transition-transform duration-100"
-                    style={{
-                      width: 110,
-                      height: 110,
-                      backgroundColor: hex,
-                      color: textColor,
-                      touchAction: 'none',
-                      cursor: 'pointer',
-                      transform: isHeld ? 'scale(0.95)' : 'scale(1)',
-                      filter: isHeld ? 'brightness(0.9)' : 'none',
-                      outline: isHeld ? '6px solid #ff9800' : 'none',
-                      outlineOffset: isHeld ? '4px' : '0',
-                    }}
-                  >
-                    <span className="text-lg font-bold leading-tight">{player.name}</span>
-                    <span className="text-xs opacity-70 mt-1">
-                      {isHeld ? 'Holding...' : 'Hold Here'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         )}
 
-        {isTracking && (
-          <div className="text-center text-white px-[9px] w-full">
-            <p className="text-xl text-gray-400 mb-6">Lift your finger at the right moment...</p>
+        {/* Absolutely positioned player buttons */}
+        {guessingPlayers.map((player, i) => {
+          const pos = positionsRef.current.get(i);
+          if (!pos) return null;
 
-            {/* Show buttons during tracking — lifted ones show confirmation */}
-            <div className="flex flex-wrap justify-center gap-4">
-              {guessingPlayers.map((player, i) => {
-                const { hex } = PLAYER_COLORS[player.color];
-                const textColor = idealTextColor(hex);
-                const hasLifted = liftedButtonsRef.current.has(i);
-                const isHeld = heldButtonsRef.current.has(i) && phase === 'tracking';
-                const handlers = getHandlers(i);
+          const { hex } = PLAYER_COLORS[player.color];
+          const textColor = idealTextColor(hex);
+          const isHeld = heldButtonsRef.current.has(i);
+          const hasLifted = liftedButtonsRef.current.has(i);
+          const handlers = getHandlers(i);
+          const pixel = getPixelPosition(pos);
 
-                return (
-                  <div
-                    key={player.id}
-                    onPointerDown={handlers.onPointerDown as unknown as React.PointerEventHandler}
-                    onPointerUp={handlers.onPointerUp as unknown as React.PointerEventHandler}
-                    onPointerCancel={handlers.onPointerCancel as unknown as React.PointerEventHandler}
-                    className="flex flex-col items-center justify-center rounded-full select-none transition-transform duration-100"
-                    style={{
-                      width: 110,
-                      height: 110,
-                      backgroundColor: hasLifted ? '#4caf50' : hex,
-                      color: hasLifted ? '#ffffff' : textColor,
-                      touchAction: 'none',
-                      transform: isHeld ? 'scale(0.95)' : 'scale(1)',
-                      filter: isHeld ? 'brightness(0.9)' : 'none',
-                      outline: isHeld ? '6px solid #ff9800' : hasLifted ? '6px solid #4caf50' : 'none',
-                      outlineOffset: '4px',
-                      opacity: hasLifted ? 0.7 : 1,
-                    }}
-                  >
-                    <span className="text-lg font-bold leading-tight">{player.name}</span>
-                    {hasLifted && (
-                      <span className="text-xs mt-1">Lifted!</span>
-                    )}
-                    {!hasLifted && (
-                      <span className="text-xs opacity-70 mt-1">Holding...</span>
-                    )}
-                  </div>
-                );
-              })}
+          return (
+            <div
+              key={player.id}
+              onPointerDown={handlers.onPointerDown as unknown as React.PointerEventHandler}
+              onPointerMove={handlers.onPointerMove as unknown as React.PointerEventHandler}
+              onPointerUp={handlers.onPointerUp as unknown as React.PointerEventHandler}
+              onPointerCancel={handlers.onPointerCancel as unknown as React.PointerEventHandler}
+              className="absolute flex flex-col items-center justify-center rounded-full select-none"
+              style={{
+                width: BUTTON_SIZE,
+                height: BUTTON_SIZE,
+                left: pixel.left,
+                top: pixel.top,
+                transform: `translate(-50%, -50%) ${isHeld ? 'scale(0.95)' : 'scale(1)'}`,
+                backgroundColor: hasLifted ? '#4caf50' : hex,
+                color: hasLifted ? '#ffffff' : textColor,
+                touchAction: 'none',
+                cursor: 'pointer',
+                filter: isHeld ? 'brightness(0.9)' : 'none',
+                outline: isHeld ? '6px solid #ff9800' : hasLifted ? '6px solid #4caf50' : 'none',
+                outlineOffset: '4px',
+                opacity: hasLifted ? 0.7 : 1,
+                transition: 'transform 0.1s, filter 0.1s, outline 0.15s, background-color 0.2s',
+                zIndex: isHeld ? 50 : 45,
+              }}
+            >
+              <span className="text-lg font-bold leading-tight pointer-events-none">{player.name}</span>
+              <span className="text-xs opacity-70 mt-1 pointer-events-none">
+                {hasLifted ? 'Lifted!' : isHeld ? 'Holding...' : 'Hold Here'}
+              </span>
             </div>
-          </div>
-        )}
+          );
+        })}
       </div>
     </>
   );
