@@ -113,3 +113,28 @@ export function mapFingerResultsToScoring(
     };
   });
 }
+
+/**
+ * Auto-map finger results to players when using per-player buttons.
+ * touchId = index into guessingPlayers array (players excluding active player).
+ */
+export function autoMapFingerResults(
+  fingerResults: FingerResult[],
+  allPlayers: Player[],
+  activePlayerIndex: number,
+  chosenNumber: number
+): ScoringInput[] {
+  const guessingPlayers = allPlayers.filter((_, i) => i !== activePlayerIndex);
+  const targetTimeMs = chosenNumber * 1000;
+
+  return fingerResults.map((result) => {
+    const player = guessingPlayers[result.touchId];
+    return {
+      playerId: player.id,
+      playerName: player.name,
+      playerColor: player.color,
+      liftTimeMs: result.liftTimeMs,
+      targetTimeMs,
+    };
+  });
+}

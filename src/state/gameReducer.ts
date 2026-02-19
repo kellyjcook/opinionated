@@ -1,4 +1,5 @@
 import type { GameState, Player, Scenario, FingerResult, TurnResult } from '../types/game';
+import { autoMapFingerResults, calculateScores } from '../lib/scoring';
 
 export type GameAction =
   | { type: 'START_NEW_GAME' }
@@ -130,12 +131,31 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ],
       };
 
-    case 'ALL_FINGERS_LIFTED':
+    case 'ALL_FINGERS_LIFTED': {
+      // Per-player buttons: touchId = guessing player index.
+      // Auto-map results and skip manual result assignment.
+      if (state.chosenNumber !== null) {
+        const inputs = autoMapFingerResults(
+          action.results,
+          state.players,
+          state.activePlayerIndex,
+          state.chosenNumber
+        );
+        const turnResults = calculateScores(inputs);
+        return {
+          ...state,
+          phase: 'scoring',
+          fingerResults: action.results,
+          turnResults,
+        };
+      }
+      // Fallback (should not happen)
       return {
         ...state,
         phase: 'resultAssignment',
         fingerResults: action.results,
       };
+    }
 
     case 'SET_TURN_RESULTS':
       return {

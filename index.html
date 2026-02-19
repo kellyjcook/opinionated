@@ -11,5 +11,19 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Force reload on new deployments
+      (function() {
+        var key = '__opinionated_build__';
+        var stored = localStorage.getItem(key);
+        var current = document.querySelector('meta[name="build-time"]');
+        if (current && stored && stored !== current.content) {
+          localStorage.setItem(key, current.content);
+          location.reload();
+        } else if (current) {
+          localStorage.setItem(key, current.content);
+        }
+      })();
+    </script>
   </body>
 </html>
